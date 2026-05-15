@@ -276,12 +276,13 @@ void calculate_metrics(PCB* processes, int count) {
    RESULTS TABLE
    ═════════════════════════════════════════════════════════════════════ */
 void print_results(PCB* processes, int count, const char* algo_name) {
-    float total_wt  = 0, total_tat = 0;
+    float total_wt  = 0, total_tat = 0, total_burst = 0;
+    int max_completion = 0;
 
     printf("\n");
-    print_separator();
+    print_separator(); // Error Fixed: Argument hata diya gaya hai
     printf("  RESULTS: %s\n", algo_name);
-    print_separator();
+    print_separator(); 
     printf("  %-8s %-10s %-10s %-12s %-12s %-12s\n",
            "Process", "Arrival", "Burst", "Completion", "Waiting", "Turnaround");
     printf("  %-8s %-10s %-10s %-12s %-12s %-12s\n",
@@ -298,15 +299,29 @@ void print_results(PCB* processes, int count, const char* algo_name) {
 
         total_wt  += processes[i].waiting_time;
         total_tat += processes[i].turnaround_time;
+        total_burst += processes[i].burst_time;
+        
+        // Max completion time nikalne ke liye taake throughput calculate ho sake
+        if (processes[i].completion_time > max_completion) {
+            max_completion = processes[i].completion_time;
+        }
     }
+
+    // Calculations
+    float avg_wt = total_wt / count;
+    float avg_tat = total_tat / count;
+    float throughput = (max_completion > 0) ? (float)count / max_completion : 0;
+    float cpu_utilization = (max_completion > 0) ? (total_burst / max_completion) * 100.0 : 0;
 
     printf("  %-8s %-10s %-10s %-12s %-12s %-12s\n",
            "-------", "-------", "-----", "----------", "-------", "----------");
-    printf("\n  Average Waiting Time    : %.2f sec\n", total_wt  / count);
-    printf("  Average Turnaround Time : %.2f sec\n", total_tat / count);
+    
+    printf("\n  Average Waiting Time    : %.2f sec\n", avg_wt);
+    printf("  Average Turnaround Time : %.2f sec\n", avg_tat);
+    printf("  Throughput              : %.3f processes/sec\n", throughput);
+    printf("  CPU Utilization         : %.2f%%\n", cpu_utilization);
     print_separator();
 }
-
 /* ═════════════════════════════════════════════════════════════════════
    GANTT CHART (text-based visual timeline)
    ═════════════════════════════════════════════════════════════════════ */
